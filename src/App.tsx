@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import {
-  LayoutDashboard, Box, TrendingUp, AlertTriangle, Sliders, Lightbulb, FileText, Upload, Brain, Menu, X,
+  LayoutDashboard, Box, TrendingUp, AlertTriangle, Sliders, Lightbulb, FileText, Upload, Brain, Menu, ScanLine,
 } from 'lucide-react';
 import { generateBusinessData } from './lib/data';
 import type { BusinessDataPoint } from './lib/types';
@@ -11,9 +11,10 @@ import { RiskAnalysisView } from './views/RiskAnalysisView';
 import { WhatIfView } from './views/WhatIfView';
 import { RecommendationsView } from './views/RecommendationsView';
 import { InvoiceView } from './views/InvoiceView';
+import { InvoiceProcessingView } from './views/InvoiceProcessingView';
 import { DataUploadView } from './views/DataUploadView';
 
-type ViewId = 'dashboard' | 'twin' | 'forecast' | 'risk' | 'whatif' | 'recommendations' | 'invoice' | 'data';
+type ViewId = 'dashboard' | 'twin' | 'forecast' | 'risk' | 'whatif' | 'recommendations' | 'invoice' | 'ai-invoice' | 'data';
 
 const NAV_ITEMS: { id: ViewId; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -23,6 +24,7 @@ const NAV_ITEMS: { id: ViewId; label: string; icon: typeof LayoutDashboard }[] =
   { id: 'whatif', label: 'What-If Simulator', icon: Sliders },
   { id: 'recommendations', label: 'Recommendations', icon: Lightbulb },
   { id: 'invoice', label: 'Invoice Generation', icon: FileText },
+  { id: 'ai-invoice', label: 'AI Invoice Processing', icon: ScanLine },
   { id: 'data', label: 'Data Upload', icon: Upload },
 ];
 
@@ -46,6 +48,7 @@ export default function App() {
       case 'whatif': return <WhatIfView data={businessData} />;
       case 'recommendations': return <RecommendationsView data={businessData} />;
       case 'invoice': return <InvoiceView data={businessData} onDataUpdate={handleDataUpdate} />;
+      case 'ai-invoice': return <InvoiceProcessingView />;
       case 'data': return <DataUploadView data={businessData} onDataUpdate={handleDataUpdate} />;
     }
   };
