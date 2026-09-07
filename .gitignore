@@ -21,5 +21,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+<<<<<<< HEAD
 
 .vercel
+=======
+>>>>>>> e8dd6b475a32b09ac18f43f014c03d2ffb43c37c
