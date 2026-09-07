@@ -1,9 +1,11 @@
 import { useState, useMemo, useCallback } from 'react';
 import {
-  LayoutDashboard, Box, TrendingUp, AlertTriangle, Sliders, Lightbulb, FileText, Upload, Brain, Menu, ScanLine,
+  LayoutDashboard, Box, TrendingUp, AlertTriangle, Sliders, Lightbulb,
+  FileText, Upload, Brain, Menu, ScanLine, Package, Cpu, Radio,
 } from 'lucide-react';
 import { generateBusinessData } from './lib/data';
 import type { BusinessDataPoint } from './lib/types';
+import { useWarehouseData } from './lib/use-warehouse';
 import { DashboardView } from './views/DashboardView';
 import { BusinessTwinView } from './views/BusinessTwinView';
 import { ForecastingView } from './views/ForecastingView';
@@ -13,43 +15,73 @@ import { RecommendationsView } from './views/RecommendationsView';
 import { InvoiceView } from './views/InvoiceView';
 import { InvoiceProcessingView } from './views/InvoiceProcessingView';
 import { DataUploadView } from './views/DataUploadView';
+import { SmartDashboardView } from './views/SmartDashboardView';
+import { IoTMonitoringView } from './views/IoTMonitoringView';
+import { DigitalTwinView } from './views/DigitalTwinView';
+import { DemandForecastView } from './views/DemandForecastView';
+import { RiskDetectionView } from './views/RiskDetectionView';
+import { WhatIfSimulatorView } from './views/WhatIfSimulatorView';
+import { SmartRecommendationsView } from './views/SmartRecommendationsView';
+import { InventoryView } from './views/InventoryView';
 
-type ViewId = 'dashboard' | 'twin' | 'forecast' | 'risk' | 'whatif' | 'recommendations' | 'invoice' | 'ai-invoice' | 'data';
+type ViewId =
+  | 'dashboard' | 'inventory' | 'iot' | 'twin' | 'forecast'
+  | 'risk' | 'whatif' | 'recommendations'
+  | 'invoice' | 'ai-invoice' | 'data'
+  | 'warehouse-dashboard';
 
-const NAV_ITEMS: { id: ViewId; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'twin', label: 'Business Twin', icon: Brain },
-  { id: 'forecast', label: 'Forecasting', icon: TrendingUp },
-  { id: 'risk', label: 'Risk Analysis', icon: AlertTriangle },
-  { id: 'whatif', label: 'What-If Simulator', icon: Sliders },
-  { id: 'recommendations', label: 'Recommendations', icon: Lightbulb },
-  { id: 'invoice', label: 'Invoice Generation', icon: FileText },
-  { id: 'ai-invoice', label: 'AI Invoice Processing', icon: ScanLine },
-  { id: 'data', label: 'Data Upload', icon: Upload },
+const NAV_SECTIONS: { label: string; items: { id: ViewId; label: string; icon: typeof LayoutDashboard }[] }[] = [
+  {
+    label: 'Smart Warehouse',
+    items: [
+      { id: 'warehouse-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { id: 'inventory', label: 'Inventory', icon: Package },
+      { id: 'iot', label: 'IoT Monitoring', icon: Radio },
+      { id: 'twin', label: 'Digital Twin', icon: Brain },
+      { id: 'forecast', label: 'Demand Forecast', icon: TrendingUp },
+      { id: 'risk', label: 'Risk Detection', icon: AlertTriangle },
+      { id: 'whatif', label: 'What-If Simulation', icon: Sliders },
+      { id: 'recommendations', label: 'AI Recommendations', icon: Lightbulb },
+    ],
+  },
+  {
+    label: 'Business Tools',
+    items: [
+      { id: 'invoice', label: 'Invoice Generation', icon: FileText },
+      { id: 'ai-invoice', label: 'AI Invoice Processing', icon: ScanLine },
+      { id: 'data', label: 'Data Upload', icon: Upload },
+    ],
+  },
 ];
 
+const ALL_NAV_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
+
 export default function App() {
-  const [activeView, setActiveView] = useState<ViewId>('dashboard');
+  const [activeView, setActiveView] = useState<ViewId>('warehouse-dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [businessData, setBusinessData] = useState<BusinessDataPoint[]>(() => generateBusinessData(12));
+  const warehouseState = useWarehouseData();
 
   const handleDataUpdate = useCallback((newData: BusinessDataPoint[]) => {
     setBusinessData(newData);
   }, []);
 
-  const currentNav = useMemo(() => NAV_ITEMS.find((n) => n.id === activeView), [activeView]);
+  const currentNav = useMemo(() => ALL_NAV_ITEMS.find((n) => n.id === activeView), [activeView]);
 
   const renderView = () => {
     switch (activeView) {
-      case 'dashboard': return <DashboardView data={businessData} />;
-      case 'twin': return <BusinessTwinView data={businessData} />;
-      case 'forecast': return <ForecastingView data={businessData} />;
-      case 'risk': return <RiskAnalysisView data={businessData} />;
-      case 'whatif': return <WhatIfView data={businessData} />;
-      case 'recommendations': return <RecommendationsView data={businessData} />;
+      case 'warehouse-dashboard': return <SmartDashboardView state={warehouseState} />;
+      case 'inventory': return <InventoryView state={warehouseState} />;
+      case 'iot': return <IoTMonitoringView state={warehouseState} />;
+      case 'twin': return <DigitalTwinView state={warehouseState} />;
+      case 'forecast': return <DemandForecastView state={warehouseState} />;
+      case 'risk': return <RiskDetectionView state={warehouseState} />;
+      case 'whatif': return <WhatIfSimulatorView state={warehouseState} />;
+      case 'recommendations': return <SmartRecommendationsView state={warehouseState} />;
       case 'invoice': return <InvoiceView data={businessData} onDataUpdate={handleDataUpdate} />;
       case 'ai-invoice': return <InvoiceProcessingView />;
       case 'data': return <DataUploadView data={businessData} onDataUpdate={handleDataUpdate} />;
+      default: return <SmartDashboardView state={warehouseState} />;
     }
   };
 
@@ -67,34 +99,43 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">CogniTwin</h1>
-            <p className="text-[10px] text-slate-500">Cognitive Digital Twin</p>
+            <p className="text-[10px] text-slate-500">Smart Warehouse System</p>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const active = activeView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => { setActiveView(item.id); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                  active
-                    ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                }`}
-              >
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.label}>
+              <div className="px-3 mb-1.5 text-[10px] uppercase tracking-wider text-slate-600 font-semibold">
+                {section.label}
+              </div>
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = activeView === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => { setActiveView(item.id); setSidebarOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                        active
+                          ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/30'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div className="px-4 py-4 border-t border-slate-800">
           <div className="text-[10px] text-slate-500 text-center">
-            CogniTwin v1.0 · AI-Powered<br />Business Decision Engine
+            CogniTwin v2.0 · AI-Powered<br />Smart Warehouse System
           </div>
         </div>
       </aside>
@@ -123,7 +164,11 @@ export default function App() {
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 text-xs text-slate-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live Data
+              IoT Active
+            </span>
+            <span className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 text-xs text-amber-400 border border-amber-500/20">
+              <Cpu className="w-3 h-3" />
+              Simulation
             </span>
           </div>
         </header>
